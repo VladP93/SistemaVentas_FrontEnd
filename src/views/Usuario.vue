@@ -2,7 +2,7 @@
   <v-layout align-start>
     <v-flex>
       <v-toolbar flat color="white">
-        <v-toolbar-title>Categorías</v-toolbar-title>
+        <v-toolbar-title>Usuarios</v-toolbar-title>
         <v-divider class="mx-2" inset vertical></v-divider>
         <v-spacer></v-spacer>
         <v-text-field
@@ -26,16 +26,50 @@
             <v-card-text>
               <v-container grid-list-md>
                 <v-layout wrap>
-                  <v-flex xs12 sm12 md12>
+                  <v-flex xs12 sm6 md6>
                     <v-text-field
                       v-model="nombre"
-                      label="Nombre de categoría"
+                      label="Nombre"
                     ></v-text-field>
                   </v-flex>
-                  <v-flex xs12 sm12 md12>
+                  <v-flex xs12 sm6 md6>
+                    <v-select v-model="idrol" :items="roles" label="Rol">
+                    </v-select>
+                  </v-flex>
+                  <v-flex xs12 sm6 md6>
+                    <v-select
+                      v-model="tipo_documento"
+                      :items="documentos"
+                      label="Tipo de documento"
+                    >
+                    </v-select>
+                  </v-flex>
+                  <v-flex xs12 sm6 md6>
                     <v-text-field
-                      v-model="descripcion"
-                      label="Descripción"
+                      v-model="num_documento"
+                      label="Número de documento"
+                    ></v-text-field>
+                  </v-flex>
+                  <v-flex xs12 sm6 md6>
+                    <v-text-field
+                      v-model="direccion"
+                      label="Dirección"
+                    ></v-text-field>
+                  </v-flex>
+                  <v-flex xs12 sm6 md6>
+                    <v-text-field
+                      v-model="telefono"
+                      label="Telefono"
+                    ></v-text-field>
+                  </v-flex>
+                  <v-flex xs12 sm6 md6>
+                    <v-text-field v-model="email" label="Email"></v-text-field>
+                  </v-flex>
+                  <v-flex xs12 sm6 md6>
+                    <v-text-field
+                      type="password"
+                      v-model="password"
+                      label="Contraseña"
                     ></v-text-field>
                   </v-flex>
                   <v-flex xs12 sm12 md12 v-show="valida">
@@ -73,7 +107,7 @@
               Estás por
               <span class="text--green" v-if="adAccion == 1">Activar</span>
               <span class="text--red" v-if="adAccion == 2">Desactivar</span>
-              la categoría {{ adNombre }}
+              el artículo {{ adNombre }}
             </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
@@ -100,7 +134,7 @@
       </v-toolbar>
       <v-data-table
         :headers="headers"
-        :items="categorias"
+        :items="usuarios"
         :search="search"
         class="elevation-1"
       >
@@ -109,7 +143,7 @@
             <span class="blue--text">Activo</span>
           </div>
           <div v-else>
-            <span class="red--text">Inactivo</span>
+            <span class="red--text">Desactivado</span>
           </div>
         </template>
         <template v-slot:[`item.actions`]="{ item }">
@@ -139,19 +173,34 @@ import axios from "axios";
 export default {
   data() {
     return {
-      categorias: [],
+      usuarios: [],
       dialog: false,
       headers: [
         { text: "Nombre", value: "nombre" },
-        { text: "Descripcion", value: "descripcion", sortable: false },
+        { text: "Rol", value: "rol" },
+        { text: "Tipo de documento", value: "tipo_documento" },
+        { text: "Número de documento", value: "num_documento" },
+        { text: "Dirección", value: "direccion", sortable: false },
+        { text: "Telefono", value: "telefono", sortable: false },
+        { text: "Email", value: "email", sortable: false },
         { text: "Estado", value: "condicion", sortable: false },
         { text: "Opciones", value: "actions", sortable: false },
       ],
       search: "",
       editedIndex: -1,
       id: "",
+      idrol: "",
+      roles: [],
+      tipo_documento: "",
+      documentos: ["DUI", "NIT", "PASAPORTE"],
+      num_documento: "",
       nombre: "",
-      descripcion: "",
+      direccion: "",
+      telefono: "",
+      email: "",
+      password: "",
+      passwordAnt: "",
+      actPassword: false,
       valida: 0,
       validaMensaje: [],
       adModal: 0,
@@ -162,7 +211,7 @@ export default {
   },
   computed: {
     formTitle() {
-      return this.editedIndex === -1 ? "Nueva categoría" : "Editando Categoría";
+      return this.editedIndex === -1 ? "Nuevo usuario" : "Editando usuario";
     },
   },
 
@@ -174,14 +223,30 @@ export default {
 
   created() {
     this.listar();
+    this.selectCategorias();
   },
   methods: {
     listar() {
       let me = this;
       axios
-        .get(`api/categorias/Listar`)
+        .get(`api/Usuarios/Listar`)
         .then(function(response) {
-          me.categorias = response.data;
+          me.usuarios = response.data;
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+    },
+    selectCategorias() {
+      let me = this;
+      var rolesArray = [];
+      axios
+        .get(`api/Roles/Select`)
+        .then(function(response) {
+          rolesArray = response.data;
+          rolesArray.map(function(rol) {
+            me.roles.push({ text: rol.nombre, value: rol.idrol });
+          });
         })
         .catch(function(error) {
           console.log(error);
@@ -189,9 +254,16 @@ export default {
     },
 
     editItem(item) {
-      this.idcategoria = item.idcategoria;
+      this.id = item.idusuario;
+      this.idrol = item.idrol;
       this.nombre = item.nombre;
-      this.descripcion = item.descripcion;
+      this.tipo_documento = item.tipo_documento;
+      this.num_documento = item.num_documento;
+      this.direccion = item.direccion;
+      this.telefono = item.telefono;
+      this.email = item.email;
+      this.password = item.password_hash;
+      this.passwordAnt = item.password_hash;
       this.editedIndex = 1;
       this.dialog = true;
     },
@@ -199,7 +271,7 @@ export default {
     activo(accion, item) {
       this.adModal = 1;
       this.adNombre = item.nombre;
-      this.adId = item.idcategoria;
+      this.adId = item.idusuario;
 
       if (accion === 1) {
         this.adAccion = 1;
@@ -213,7 +285,7 @@ export default {
     activar() {
       let me = this;
       axios
-        .put(`api/Categorias/Activar/${me.adId}`, {})
+        .put(`api/Usuarios/Activar/${me.adId}`, {})
         .then(function(response) {
           me.adModal = 0;
           me.adAccion = 0;
@@ -228,7 +300,7 @@ export default {
     desactivar() {
       let me = this;
       axios
-        .put(`api/Categorias/Desactivar/${me.adId}`, {})
+        .put(`api/Usuarios/Desactivar/${me.adId}`, {})
         .then(function(response) {
           me.adModal = 0;
           me.adAccion = 0;
@@ -251,8 +323,16 @@ export default {
 
     limpiar() {
       this.id = "";
+      this.idrol = "";
       this.nombre = "";
-      this.descripcion = "";
+      this.tipo_documento = "";
+      this.num_documento = "";
+      this.direccion = "";
+      this.telefono = "";
+      this.email = "";
+      this.password = "";
+      this.passwordAnt = "";
+      this.actPassword = false;
       this.editedIndex = -1;
     },
 
@@ -263,11 +343,23 @@ export default {
       if (this.editedIndex > -1) {
         //Editar
         let me = this;
+
+        if (me.password != me.passwordAnt) {
+          me.actPassword = true;
+        }
+
         axios
-          .put("api/Categorias/Actualizar", {
-            idcategoria: me.idcategoria,
+          .put("api/Usuarios/Actualizar", {
+            idusuario: me.id,
+            idrol: me.idrol,
             nombre: me.nombre,
-            descripcion: me.descripcion,
+            tipo_documento: me.tipo_documento,
+            num_documento: me.num_documento,
+            direccion: me.direccion,
+            telefono: me.telefono,
+            email: me.email,
+            password: me.password,
+            act_password: me.actPassword,
           })
           .then(function(res) {
             me.close();
@@ -281,9 +373,15 @@ export default {
         //Guardar
         let me = this;
         axios
-          .post("api/categorias/Crear", {
+          .post("api/Usuarios/Crear", {
+            idrol: me.idrol,
             nombre: me.nombre,
-            descripcion: me.descripcion,
+            tipo_documento: me.tipo_documento,
+            num_documento: me.num_documento,
+            direccion: me.direccion,
+            telefono: me.telefono,
+            email: me.email,
+            password: me.password,
           })
           .then(function(res) {
             me.close();
@@ -291,7 +389,18 @@ export default {
             me.limpiar();
           })
           .catch(function(err) {
-            console.log(err);
+            console.log({
+              idrol: me.idrol,
+              nombre: me.nombre,
+              tipo_documento: me.tipo_documento,
+              num_documento: me.num_documento,
+              direccion: me.direccion,
+              telefono: me.telefono,
+              email: me.email,
+              password: me.password,
+            });
+            console.log("no ok");
+            console.log(err.message);
           });
       }
       this.close();
@@ -300,10 +409,22 @@ export default {
     validar() {
       this.valida = 0;
       this.validaMensaje = [];
-      if (this.nombre.length < 3 || this.nombre.length > 50) {
+      if (this.nombre.length < 3 || this.nombre.length > 100) {
         this.validaMensaje.push(
-          "*La longitud del nombre debe de estar entre 3 a 50 caracteres."
+          "*La longitud del nombre debe de estar entre 3 a 100 caracteres."
         );
+      }
+      if (!this.idrol) {
+        this.validaMensaje.push("*Seleccione un rol.");
+      }
+      if (!this.tipo_documento) {
+        this.validaMensaje.push("*Seleccione un tipo de documento.");
+      }
+      if (!this.email) {
+        this.validaMensaje.push("*Ingrese el email del usuario.");
+      }
+      if (!this.password) {
+        this.validaMensaje.push("*Ingrese la contraseña.");
       }
       if (this.validaMensaje.length) {
         this.valida = 1;

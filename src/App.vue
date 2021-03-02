@@ -119,7 +119,7 @@
                 </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
-            <v-list-item :to="{ name: '' }">
+            <v-list-item :to="{ name: 'roles' }">
               <v-list-item-action>
                 <v-icon>table_chart</v-icon>
               </v-list-item-action>
@@ -129,7 +129,7 @@
                 </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
-            <v-list-item :to="{ name: '' }">
+            <v-list-item :to="{ name: 'usuarios' }">
               <v-list-item-action>
                 <v-icon>table_chart</v-icon>
               </v-list-item-action>
@@ -254,8 +254,11 @@
       <v-layout justify-center>
         <v-flex text-xs-center>
           <v-card flat item color="primary" class="white--text">
-            <v-card-text class="white--text pt-0">
-              Sistema de ventas e inventario
+            <v-card-text class="white--text pt-0"
+              ><br />
+              <h4 style="text-align:center; height:20px">
+                Sistema de ventas e inventario
+              </h4>
             </v-card-text>
           </v-card>
         </v-flex>
