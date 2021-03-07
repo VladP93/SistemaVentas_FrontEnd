@@ -5,6 +5,8 @@ import Categoria from "../views/Categoria.vue";
 import Articulo from "../views/Articulo.vue";
 import Rol from "../views/Rol.vue";
 import Usuario from "../views/Usuario.vue";
+import Cliente from "../views/Cliente.vue";
+import Proveedor from "../views/Proveedor.vue";
 
 Vue.use(VueRouter);
 
@@ -33,6 +35,16 @@ const routes = [
     path: "/usuarios",
     name: "usuarios",
     component: Usuario,
+  },
+  {
+    path: "/clientes",
+    name: "clientes",
+    component: Cliente,
+  },
+  {
+    path: "/proveedores",
+    name: "proveedores",
+    component: Proveedor,
   },
   {
     path: "/about",
