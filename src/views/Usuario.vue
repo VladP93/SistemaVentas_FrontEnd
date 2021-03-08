@@ -228,8 +228,10 @@ export default {
   methods: {
     listar() {
       let me = this;
+      let header = { Authorization: "Bearer " + this.$store.state.token };
+      let configuracion = { headers: header };
       axios
-        .get(`api/Usuarios/Listar`)
+        .get(`api/Usuarios/Listar`, configuracion)
         .then(function(response) {
           me.usuarios = response.data;
         })
@@ -239,9 +241,11 @@ export default {
     },
     selectCategorias() {
       let me = this;
+      let header = { Authorization: "Bearer " + this.$store.state.token };
+      let configuracion = { headers: header };
       var rolesArray = [];
       axios
-        .get(`api/Roles/Select`)
+        .get(`api/Roles/Select`, configuracion)
         .then(function(response) {
           rolesArray = response.data;
           rolesArray.map(function(rol) {
@@ -284,8 +288,10 @@ export default {
 
     activar() {
       let me = this;
+      let header = { Authorization: "Bearer " + this.$store.state.token };
+      let configuracion = { headers: header };
       axios
-        .put(`api/Usuarios/Activar/${me.adId}`, {})
+        .put(`api/Usuarios/Activar/${me.adId}`, {}, configuracion)
         .then(function(response) {
           me.adModal = 0;
           me.adAccion = 0;
@@ -299,8 +305,10 @@ export default {
     },
     desactivar() {
       let me = this;
+      let header = { Authorization: "Bearer " + this.$store.state.token };
+      let configuracion = { headers: header };
       axios
-        .put(`api/Usuarios/Desactivar/${me.adId}`, {})
+        .put(`api/Usuarios/Desactivar/${me.adId}`, {}, configuracion)
         .then(function(response) {
           me.adModal = 0;
           me.adAccion = 0;
@@ -340,6 +348,8 @@ export default {
       if (this.validar()) {
         return;
       }
+      let header = { Authorization: "Bearer " + this.$store.state.token };
+      let configuracion = { headers: header };
       if (this.editedIndex > -1) {
         //Editar
         let me = this;
@@ -349,18 +359,22 @@ export default {
         }
 
         axios
-          .put("api/Usuarios/Actualizar", {
-            idusuario: me.id,
-            idrol: me.idrol,
-            nombre: me.nombre,
-            tipo_documento: me.tipo_documento,
-            num_documento: me.num_documento,
-            direccion: me.direccion,
-            telefono: me.telefono,
-            email: me.email,
-            password: me.password,
-            act_password: me.actPassword,
-          })
+          .put(
+            "api/Usuarios/Actualizar",
+            {
+              idusuario: me.id,
+              idrol: me.idrol,
+              nombre: me.nombre,
+              tipo_documento: me.tipo_documento,
+              num_documento: me.num_documento,
+              direccion: me.direccion,
+              telefono: me.telefono,
+              email: me.email,
+              password: me.password,
+              act_password: me.actPassword,
+            },
+            configuracion
+          )
           .then(function(res) {
             me.close();
             me.listar();
@@ -373,16 +387,20 @@ export default {
         //Guardar
         let me = this;
         axios
-          .post("api/Usuarios/Crear", {
-            idrol: me.idrol,
-            nombre: me.nombre,
-            tipo_documento: me.tipo_documento,
-            num_documento: me.num_documento,
-            direccion: me.direccion,
-            telefono: me.telefono,
-            email: me.email,
-            password: me.password,
-          })
+          .post(
+            "api/Usuarios/Crear",
+            {
+              idrol: me.idrol,
+              nombre: me.nombre,
+              tipo_documento: me.tipo_documento,
+              num_documento: me.num_documento,
+              direccion: me.direccion,
+              telefono: me.telefono,
+              email: me.email,
+              password: me.password,
+            },
+            configuracion
+          )
           .then(function(res) {
             me.close();
             me.listar();

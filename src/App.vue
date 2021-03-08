@@ -3,12 +3,13 @@
     <v-navigation-drawer
       :clipped="$vuetify.breakpoint.lgAndUp"
       v-model="drawer"
+      v-if="logueado"
       fixed
       app
     >
       <v-list dense>
-        <template>
-          <v-list-item :to="{ name: 'Home' }">
+        <template v-if="esAdmin || esBodeguero || esVendedor">
+          <v-list-item :to="{ name: 'home' }">
             <v-list-item-action>
               <v-icon>home</v-icon>
             </v-list-item-action>
@@ -17,7 +18,7 @@
             </v-list-item-title>
           </v-list-item>
         </template>
-        <template>
+        <template v-if="esAdmin || esBodeguero">
           <v-list-group>
             <v-list-item slot="activator">
               <v-list-item-content>
@@ -48,7 +49,7 @@
             </v-list-item>
           </v-list-group>
         </template>
-        <template>
+        <template v-if="esAdmin || esBodeguero">
           <v-list-group>
             <v-list-item slot="activator">
               <v-list-item-content>
@@ -79,7 +80,7 @@
             </v-list-item>
           </v-list-group>
         </template>
-        <template>
+        <template v-if="esAdmin || esVendedor">
           <v-list-group>
             <v-list-item slot="activator">
               <v-list-item-content>
@@ -110,7 +111,7 @@
             </v-list-item>
           </v-list-group>
         </template>
-        <template>
+        <template v-if="esAdmin">
           <v-list-group>
             <v-list-item slot="activator">
               <v-list-item-content>
@@ -141,7 +142,7 @@
             </v-list-item>
           </v-list-group>
         </template>
-        <template>
+        <template v-if="esAdmin">
           <v-list-group>
             <v-list-item slot="activator">
               <v-list-item-content>
@@ -172,7 +173,7 @@
             </v-list-item>
           </v-list-group>
         </template>
-        <template>
+        <!-- <template >
           <v-list-group>
             <v-list-item slot="activator">
               <v-list-item-content>
@@ -222,7 +223,7 @@
               </v-list-item-content>
             </v-list-item>
           </v-list-group>
-        </template>
+        </template> -->
       </v-list>
     </v-navigation-drawer>
 
@@ -238,9 +239,11 @@
         <span class="hidden-sm-and-down">Sistema</span>
       </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn icon>
-        <v-icon>apps</v-icon>
-      </v-btn>
+      <v-btn @click="salir" v-if="logueado" icon style="margin-right:20px">
+        <v-icon style="margin-right:5px">logout</v-icon>Salir</v-btn
+      ><v-btn v-else icon style="margin-right:20px">
+        <v-icon style="margin-right:5px">login</v-icon>Ingresar</v-btn
+      >
     </v-app-bar>
     <v-main>
       <v-container fluid fill-height>
@@ -274,6 +277,36 @@ export default {
     return {
       drawer: null,
     };
+  },
+  computed: {
+    logueado() {
+      return this.$store.state.usuario;
+    },
+    esAdmin() {
+      return (
+        this.$store.state.usuario &&
+        this.$store.state.usuario.rol == "Administrador"
+      );
+    },
+    esBodeguero() {
+      return (
+        this.$store.state.usuario &&
+        this.$store.state.usuario.rol == "Bodeguero"
+      );
+    },
+    esVendedor() {
+      return (
+        this.$store.state.usuario && this.$store.state.usuario.rol == "Vendedor"
+      );
+    },
+  },
+  created() {
+    this.$store.dispatch("autoLogin");
+  },
+  methods: {
+    salir() {
+      this.$store.dispatch("salir");
+    },
   },
 };
 </script>

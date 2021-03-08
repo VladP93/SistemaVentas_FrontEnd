@@ -178,8 +178,10 @@ export default {
   methods: {
     listar() {
       let me = this;
+      let header = { Authorization: "Bearer " + this.$store.state.token };
+      let configuracion = { headers: header };
       axios
-        .get(`api/categorias/Listar`)
+        .get(`api/categorias/Listar`, configuracion)
         .then(function(response) {
           me.categorias = response.data;
         })
@@ -212,8 +214,10 @@ export default {
 
     activar() {
       let me = this;
+      let header = { Authorization: "Bearer " + this.$store.state.token };
+      let configuracion = { headers: header };
       axios
-        .put(`api/Categorias/Activar/${me.adId}`, {})
+        .put(`api/Categorias/Activar/${me.adId}`, {}, configuracion)
         .then(function(response) {
           me.adModal = 0;
           me.adAccion = 0;
@@ -227,8 +231,10 @@ export default {
     },
     desactivar() {
       let me = this;
+      let header = { Authorization: "Bearer " + this.$store.state.token };
+      let configuracion = { headers: header };
       axios
-        .put(`api/Categorias/Desactivar/${me.adId}`, {})
+        .put(`api/Categorias/Desactivar/${me.adId}`, {}, configuracion)
         .then(function(response) {
           me.adModal = 0;
           me.adAccion = 0;
@@ -260,15 +266,21 @@ export default {
       if (this.validar()) {
         return;
       }
+      let header = { Authorization: "Bearer " + this.$store.state.token };
+      let configuracion = { headers: header };
       if (this.editedIndex > -1) {
         //Editar
         let me = this;
         axios
-          .put("api/Categorias/Actualizar", {
-            idcategoria: me.idcategoria,
-            nombre: me.nombre,
-            descripcion: me.descripcion,
-          })
+          .put(
+            "api/Categorias/Actualizar",
+            {
+              idcategoria: me.idcategoria,
+              nombre: me.nombre,
+              descripcion: me.descripcion,
+            },
+            configuracion
+          )
           .then(function(res) {
             me.close();
             me.listar();
@@ -281,10 +293,14 @@ export default {
         //Guardar
         let me = this;
         axios
-          .post("api/categorias/Crear", {
-            nombre: me.nombre,
-            descripcion: me.descripcion,
-          })
+          .post(
+            "api/categorias/Crear",
+            {
+              nombre: me.nombre,
+              descripcion: me.descripcion,
+            },
+            configuracion
+          )
           .then(function(res) {
             me.close();
             me.listar();

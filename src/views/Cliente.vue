@@ -156,8 +156,10 @@ export default {
   methods: {
     listar() {
       let me = this;
+      let header = { Authorization: "Bearer " + this.$store.state.token };
+      let configuracion = { headers: header };
       axios
-        .get(`api/Personas/ListarClientes`)
+        .get(`api/Personas/ListarClientes`, configuracion)
         .then(function(response) {
           me.clientes = response.data;
         })
@@ -201,6 +203,8 @@ export default {
       if (this.validar()) {
         return;
       }
+      let header = { Authorization: "Bearer " + this.$store.state.token };
+      let configuracion = { headers: header };
       if (this.editedIndex > -1) {
         //Editar
         let me = this;
@@ -210,16 +214,20 @@ export default {
         }
 
         axios
-          .put("api/Personas/Actualizar", {
-            idpersona: me.id,
-            tipo_persona: "Cliente",
-            nombre: me.nombre,
-            tipo_documento: me.tipo_documento,
-            num_documento: me.num_documento,
-            direccion: me.direccion,
-            telefono: me.telefono,
-            email: me.email,
-          })
+          .put(
+            "api/Personas/Actualizar",
+            {
+              idpersona: me.id,
+              tipo_persona: "Cliente",
+              nombre: me.nombre,
+              tipo_documento: me.tipo_documento,
+              num_documento: me.num_documento,
+              direccion: me.direccion,
+              telefono: me.telefono,
+              email: me.email,
+            },
+            configuracion
+          )
           .then(function(res) {
             me.close();
             me.listar();
@@ -232,15 +240,19 @@ export default {
         //Guardar
         let me = this;
         axios
-          .post("api/Personas/Crear", {
-            tipo_persona: "Cliente",
-            nombre: me.nombre,
-            tipo_documento: me.tipo_documento,
-            num_documento: me.num_documento,
-            direccion: me.direccion,
-            telefono: me.telefono,
-            email: me.email,
-          })
+          .post(
+            "api/Personas/Crear",
+            {
+              tipo_persona: "Cliente",
+              nombre: me.nombre,
+              tipo_documento: me.tipo_documento,
+              num_documento: me.num_documento,
+              direccion: me.direccion,
+              telefono: me.telefono,
+              email: me.email,
+            },
+            configuracion
+          )
           .then(function(res) {
             me.close();
             me.listar();

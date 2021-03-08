@@ -216,8 +216,10 @@ export default {
   methods: {
     listar() {
       let me = this;
+      let header = { Authorization: "Bearer " + this.$store.state.token };
+      let configuracion = { headers: header };
       axios
-        .get(`api/Articulos/Listar`)
+        .get(`api/Articulos/Listar`, configuracion)
         .then(function(response) {
           me.articulos = response.data;
         })
@@ -227,9 +229,11 @@ export default {
     },
     selectCategorias() {
       let me = this;
+      let header = { Authorization: "Bearer " + this.$store.state.token };
+      let configuracion = { headers: header };
       var categoriasArray = [];
       axios
-        .get(`api/Categorias/Select`)
+        .get(`api/Categorias/Select`, configuracion)
         .then(function(response) {
           categoriasArray = response.data;
           categoriasArray.map(function(cat) {
@@ -269,8 +273,10 @@ export default {
 
     activar() {
       let me = this;
+      let header = { Authorization: "Bearer " + this.$store.state.token };
+      let configuracion = { headers: header };
       axios
-        .put(`api/Articulos/Activar/${me.adId}`, {})
+        .put(`api/Articulos/Activar/${me.adId}`, {}, configuracion)
         .then(function(response) {
           me.adModal = 0;
           me.adAccion = 0;
@@ -284,8 +290,10 @@ export default {
     },
     desactivar() {
       let me = this;
+      let header = { Authorization: "Bearer " + this.$store.state.token };
+      let configuracion = { headers: header };
       axios
-        .put(`api/Articulos/Desactivar/${me.adId}`, {})
+        .put(`api/Articulos/Desactivar/${me.adId}`, {}, configuracion)
         .then(function(response) {
           me.adModal = 0;
           me.adAccion = 0;
@@ -321,19 +329,25 @@ export default {
       if (this.validar()) {
         return;
       }
+      let header = { Authorization: "Bearer " + this.$store.state.token };
+      let configuracion = { headers: header };
       if (this.editedIndex > -1) {
         //Editar
         let me = this;
         axios
-          .put("api/Articulos/Actualizar", {
-            idarticulo: me.idarticulo,
-            idcategoria: me.idcategoria,
-            codigo: me.codigo,
-            nombre: me.nombre,
-            stock: me.stock,
-            precio_venta: me.precio_venta,
-            descripcion: me.descripcion,
-          })
+          .put(
+            "api/Articulos/Actualizar",
+            {
+              idarticulo: me.idarticulo,
+              idcategoria: me.idcategoria,
+              codigo: me.codigo,
+              nombre: me.nombre,
+              stock: me.stock,
+              precio_venta: me.precio_venta,
+              descripcion: me.descripcion,
+            },
+            configuracion
+          )
           .then(function(res) {
             me.close();
             me.listar();
@@ -347,14 +361,18 @@ export default {
         let me = this;
         console.log("Haciendo peticion");
         axios
-          .post("api/Articulos/Crear", {
-            idcategoria: me.idcategoria,
-            codigo: me.codigo,
-            nombre: me.nombre,
-            stock: me.stock,
-            precio_venta: me.precio_venta,
-            descripcion: me.descripcion,
-          })
+          .post(
+            "api/Articulos/Crear",
+            {
+              idcategoria: me.idcategoria,
+              codigo: me.codigo,
+              nombre: me.nombre,
+              stock: me.stock,
+              precio_venta: me.precio_venta,
+              descripcion: me.descripcion,
+            },
+            configuracion
+          )
           .then(function(res) {
             console.log({
               idcategoria: me.idcategoria,

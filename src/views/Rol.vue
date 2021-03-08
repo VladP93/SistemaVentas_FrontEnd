@@ -60,8 +60,10 @@ export default {
   methods: {
     listar() {
       let me = this;
+      let header = { Authorization: "Bearer " + this.$store.state.token };
+      let configuracion = { headers: header };
       axios
-        .get(`api/roles/Listar`)
+        .get(`api/roles/Listar`, configuracion)
         .then(function(response) {
           me.roles = response.data;
         })
