@@ -9,6 +9,7 @@ import Usuario from "../views/Usuario.vue";
 import Cliente from "../views/Cliente.vue";
 import Proveedor from "../views/Proveedor.vue";
 import Ingreso from "../views/Ingreso.vue";
+import Venta from "../views/Venta.vue";
 import store from "../store/index";
 
 Vue.use(VueRouter);
@@ -71,6 +72,15 @@ const routes = [
     path: "/clientes",
     name: "clientes",
     component: Cliente,
+    meta: {
+      administrador: true,
+      vendedor: true,
+    },
+  },
+  {
+    path: "/ventas",
+    name: "ventas",
+    component: Venta,
     meta: {
       administrador: true,
       vendedor: true,
