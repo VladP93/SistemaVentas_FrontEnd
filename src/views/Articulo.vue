@@ -2,6 +2,7 @@
   <v-layout align-start>
     <v-flex>
       <v-toolbar flat color="white">
+        <v-btn @click="crearPDF"><v-icon>print</v-icon></v-btn>
         <v-toolbar-title>Articulos</v-toolbar-title>
         <v-divider class="mx-2" inset vertical></v-divider>
         <v-spacer></v-spacer>
@@ -164,6 +165,8 @@
 </template>
 <script>
 import axios from "axios";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 export default {
   data() {
     return {
@@ -214,6 +217,34 @@ export default {
     this.selectCategorias();
   },
   methods: {
+    crearPDF() {
+      var columns = [
+        { title: "Nombre", dataKey: "nombre" },
+        { title: "Código", dataKey: "codigo" },
+        { title: "Categoría", dataKey: "categoria" },
+        { title: "Stock", dataKey: "stock" },
+        { title: "Precio de venta", dataKey: "precio_venta" },
+      ];
+      var rows = [];
+      this.articulos.map(function(a) {
+        rows.push({
+          nombre: a.nombre,
+          codigo: a.codigo,
+          categoria: a.categoria,
+          stock: a.stock,
+          precio_venta: a.precio_venta,
+        });
+      });
+
+      var doc = new jsPDF("p", "pt");
+      doc.autoTable(columns, rows, {
+        margin: { top: 60 },
+        addPageContent: function(data) {
+          doc.text("Listado de artículos", 40, 30);
+        },
+      });
+      doc.save("Articulos_reportes.pdf");
+    },
     listar() {
       let me = this;
       let header = { Authorization: "Bearer " + this.$store.state.token };

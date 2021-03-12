@@ -117,6 +117,143 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
+        <v-dialog v-model="comprobanteModal" max-width="1000px">
+          <v-card>
+            <v-card-text>
+              <v-btn @click="crearPDF" style="margin-top:20px"
+                ><v-icon>print</v-icon></v-btn
+              >
+              <div id="factura">
+                <header>
+                  <div id="logo">
+                    <img src="../assets/logofactura.png" id="imagen" />
+                  </div>
+                  <div id="datos">
+                    <p id="encabezado">
+                      <b>Ventas</b><br />Dirección - Estado, País<br />Telefono:(+000)00000000<br />Email:correo@servidor.com
+                    </p>
+                  </div>
+                  <div id="fact">
+                    <p>
+                      {{ tipo_comprobante }}<br />
+                      {{ serie_comprobante }} - {{ num_comprobante }}<br />
+                      {{ fecha_hora }}
+                    </p>
+                  </div>
+                </header>
+                <br />
+                <section>
+                  <div>
+                    <table id="facliente">
+                      <tbody>
+                        <tr>
+                          <td id="cliente">
+                            <strong>Sr(a). {{ cliente }}</strong
+                            ><br />
+                            <strong>Documento:</strong> {{ num_documento
+                            }}<br />
+                            <strong>Dirección:</strong> {{ direccion }}<br />
+                            <strong>Teléfono:</strong> {{ telefono }}<br />
+                            <strong>Email:</strong> {{ email }}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+                <br />
+                <section>
+                  <div>
+                    <table id="facarticulo">
+                      <thead>
+                        <tr id="fa">
+                          <th>CANT</th>
+                          <th>DESCRIPCION</th>
+                          <th>PRECIO UNIT</th>
+                          <th>DESC.</th>
+                          <th>PRECIO TOTAL</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="det in detalles" :key="det.iddetalle_venta">
+                          <td style="text-align:center;">{{ det.cantidad }}</td>
+                          <td>
+                            {{ det.articulo }}
+                          </td>
+                          <td style="text-align:right;">
+                            $ {{ det.precio.toFixed(2) }}
+                          </td>
+                          <td style="text-align:right;">
+                            $ {{ det.descuento.toFixed(2) }}
+                          </td>
+                          <td style="text-align:right;">
+                            $
+                            {{
+                              (
+                                det.precio * det.cantidad -
+                                det.descuento
+                              ).toFixed(2)
+                            }}
+                          </td>
+                        </tr>
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <th></th>
+                          <th></th>
+                          <th></th>
+                          <th style="text-align:right;">SUBTOTAL</th>
+                          <th style="text-align:right;">
+                            $
+                            {{
+                              (totalParcial = (total - totalImpuesto).toFixed(
+                                2
+                              ))
+                            }}
+                          </th>
+                        </tr>
+                        <tr>
+                          <th></th>
+                          <th></th>
+                          <th></th>
+                          <th style="text-align:right;">IVA (13%)</th>
+                          <th style="text-align:right;">
+                            $
+                            {{
+                              (totalImpuesto = (
+                                (total * impuesto) /
+                                (100 + impuesto)
+                              ).toFixed(2))
+                            }}
+                          </th>
+                        </tr>
+                        <tr>
+                          <th></th>
+                          <th></th>
+                          <th></th>
+                          <th style="text-align:right;">TOTAL</th>
+                          <th style="text-align:right;">
+                            $ {{ (total = calcularTotal.toFixed(2)) }}
+                          </th>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </section>
+                <br />
+                <br />
+                <footer>
+                  <div id="gracias">
+                    <p><b>Gracias por su compra!</b></p>
+                  </div>
+                </footer>
+              </div>
+              <v-btn @click="ocultarComprobante" color="blue darken-1" text
+                >Cancelar</v-btn
+              >
+            </v-card-text>
+          </v-card>
+        </v-dialog>
       </v-toolbar>
       <v-data-table
         :headers="headers"
@@ -141,6 +278,14 @@
             v-if="item.estado == 'Aceptado'"
           >
             tab
+          </v-icon>
+          <v-icon
+            small
+            class="mr-2"
+            @click="mostrarComprobante(item)"
+            v-if="item.estado == 'Aceptado'"
+          >
+            print
           </v-icon>
           <template v-if="item.estado == 'Aceptado'">
             <v-icon small @click="activo(2, item)">
@@ -328,6 +473,8 @@
 </template>
 <script>
 import axios from "axios";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 export default {
   data() {
     return {
@@ -391,6 +538,13 @@ export default {
       adAccion: 0,
       adNombre: "",
       adId: "",
+      comprobanteModal: false,
+      cliente: "",
+      fecha_hora: "",
+      num_documento: "",
+      direccion: "",
+      telefono: "",
+      email: "",
     };
   },
   computed: {
@@ -417,6 +571,40 @@ export default {
     this.selectClientes();
   },
   methods: {
+    crearPDF() {
+      var quotes = document.getElementById("factura");
+      html2canvas(quotes).then(function(canvas) {
+        var imgData = canvas.toDataURL("image/img");
+        var imgWidth = 210;
+        var pageHeight = 295;
+        var imgHeight = (canvas.height * imgWidth) / canvas.width;
+        var heightLeft = imgHeight;
+        var doc = new jsPDF("p", "mm", "a4");
+        var position = 0;
+
+        doc.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        doc.save("comprobanteVenta.pdf");
+      });
+    },
+    mostrarComprobante(item) {
+      this.limpiar();
+      this.tipo_comprobante = item.tipo_comprobante;
+      this.serie_comprobante = item.serie_comprobante;
+      this.num_comprobante = item.num_comprobante;
+      this.cliente = item.cliente;
+      this.num_documento = item.num_documento;
+      this.direccion = item.direccion;
+      this.telefono = item.telefono;
+      this.email = item.email;
+      this.fecha_hora = item.fecha_hora;
+      this.impuesto = item.impuesto;
+      this.listarDetalles(item.idventa);
+      this.comprobanteModal = true;
+    },
+    ocultarComprobante() {
+      this.comprobanteModal = false;
+      this.limpiar();
+    },
     mostrarNuevo() {
       this.verNuevo = true;
     },
@@ -691,5 +879,80 @@ export default {
 }
 .btnAgregarDetalle:hover {
   color: #0c0;
+}
+
+#factura {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+}
+
+#logo {
+  float: left;
+  margin-left: 2%;
+  margin-right: 2%;
+}
+#imagen {
+  width: 100px;
+}
+
+#fact {
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+}
+
+#datos {
+  float: left;
+  margin-top: 0%;
+  margin-left: 2%;
+  margin-right: 2%;
+  /*text-align: justify;*/
+}
+
+#encabezado {
+  text-align: center;
+  margin-left: 10px;
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+section {
+  clear: left;
+}
+
+#cliente {
+  text-align: left;
+}
+
+#facliente {
+  width: 40%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  margin-bottom: 15px;
+}
+
+#fa {
+  color: #ffffff;
+  font-size: 14px;
+}
+
+#facarticulo {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  padding: 20px;
+  margin-bottom: 15px;
+}
+
+#facarticulo thead {
+  padding: 20px;
+  background: #2183e3;
+  text-align: center;
+  border-bottom: 1px solid #ffffff;
+}
+
+#gracias {
+  text-align: center;
 }
 </style>
