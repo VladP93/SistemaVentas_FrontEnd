@@ -2,16 +2,21 @@
   <v-layout align-start>
     <v-flex>
       <v-toolbar flat color="white">
-        <v-toolbar-title>Ventas</v-toolbar-title>
+        <v-toolbar-title>Consulta de Ventas</v-toolbar-title>
         <v-divider class="mx-2" inset vertical></v-divider>
         <v-spacer></v-spacer>
+        Desde:&nbsp;
         <v-text-field
           class="text-xs-center"
-          v-model="search"
-          append-icon="search"
-          label="Búsqueda"
-          single-line
-          hide-details
+          type="date"
+          v-model="fechaInicio"
+          v-if="!verNuevo"
+        ></v-text-field>
+        Hasta:&nbsp;
+        <v-text-field
+          class="text-xs-center"
+          type="date"
+          v-model="fechaFin"
           v-if="!verNuevo"
         ></v-text-field>
         <template v-if="!verNuevo"
@@ -24,106 +29,12 @@
             >Buscar</v-btn
           >
         </template>
-        <v-spacer></v-spacer>
-        <template v-if="!verNuevo"
-          ><v-btn color="primary" dark class="mb-2" @click="mostrarNuevo"
-            >Nuevo</v-btn
-          >
-        </template>
-        <v-dialog v-model="verArticulo" max-width="1000px">
-          <v-card>
-            <v-card-title>
-              <span class="headline">Seleccione un artículo</span>
-            </v-card-title>
-            <v-card-text>
-              <v-container grid-list-md>
-                <v-layout wrap>
-                  <v-flex xs12 sm12 md12 lg12 xl12>
-                    <v-text-field
-                      class="text-xs-center"
-                      v-model="texto"
-                      append-icon="search"
-                      label="Búsqueda"
-                      @keyup.enter="listarArticulo()"
-                      single-line
-                      hide-details
-                    ></v-text-field>
-                    <template>
-                      <v-data-table
-                        :headers="cabeceraArticulos"
-                        :items="articulos"
-                        class="elevation-1"
-                        :search="texto"
-                      >
-                        <template v-slot:[`item.agregarDetalle`]="{ item }">
-                          <v-icon
-                            small
-                            class="mr-2 btnAgregarDetalle"
-                            @click="agregarDetalle(item)"
-                          >
-                            add
-                          </v-icon>
-                        </template>
-                        <template v-slot:no-data>
-                          <span>No hay datos</span>
-                        </template>
-                      </v-data-table>
-                    </template>
-                  </v-flex>
-                </v-layout>
-              </v-container>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn @click="ocultarArticulos()" color="blue darken" text
-                >Cerrar</v-btn
-              >
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-        <v-dialog v-model="adModal" max-width="350px">
-          <v-card>
-            <v-card-title class="headline" v-if="adAccion == 1"
-              >¿Activar venta?</v-card-title
-            >
-            <v-card-title class="headline" v-if="adAccion == 2"
-              >¿Anular venta?</v-card-title
-            >
-            <v-card-text>
-              Estás por
-              <span class="text--green" v-if="adAccion == 1">Activar</span>
-              <span class="text--red" v-if="adAccion == 2">Anular</span>
-              la venta {{ adNombre }}
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="green darken-1" text @click="cerrarModalActivo"
-                >Cancelar</v-btn
-              >
-              <v-btn
-                v-if="adAccion == 1"
-                color="green darken-1"
-                text
-                @click="activar"
-                >Aceptar</v-btn
-              >
-              <v-btn
-                v-if="adAccion == 2"
-                color="red darken-1"
-                text
-                @click="desactivar"
-                >Anular</v-btn
-              >
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
         <v-dialog v-model="comprobanteModal" max-width="1000px">
           <v-card>
             <v-card-text>
               <v-btn @click="crearPDF" style="margin-top:20px"
                 ><v-icon>print</v-icon></v-btn
               >
-
               <div id="factura" v-if="comprobanteModal">
                 <header>
                   <div id="logo">
@@ -259,7 +170,6 @@
       <v-data-table
         :headers="headers"
         :items="ventas"
-        :search="search"
         class="elevation-1"
         v-if="!verNuevo"
       >
@@ -288,11 +198,6 @@
           >
             print
           </v-icon>
-          <template v-if="item.estado == 'Aceptado'">
-            <v-icon small @click="activo(2, item)">
-              block
-            </v-icon>
-          </template>
         </template>
         <template v-slot:no-data>
           <span>No hay datos</span>
@@ -395,16 +300,6 @@
                     check
                   </v-icon>
                 </template>
-              </template>
-              <template v-slot:[`item.borrarDetalle`]="{ item }">
-                <v-icon
-                  small
-                  class="mr-2 btnEliminarDetalle"
-                  @click="eliminarDetalle(detalles, item)"
-                  :disabled="!verDet"
-                >
-                  delete
-                </v-icon>
               </template>
               <template v-slot:[`item.cantidad`]="{ item }">
                 <v-text-field
@@ -547,6 +442,8 @@ export default {
       direccion: "",
       telefono: "",
       email: "",
+      fechaInicio: "",
+      fechaFin: "",
     };
   },
   computed: {
@@ -614,40 +511,6 @@ export default {
       this.verNuevo = false;
       this.limpiar();
     },
-    buscarCodigo() {
-      let me = this;
-      me.errorArticulo = null;
-      let header = { Authorization: "Bearer " + this.$store.state.token };
-      let configuracion = { headers: header };
-      axios
-        .get(`api/Articulos/BuscarCodigoVenta/${this.codigo}`, configuracion)
-        .then(function(response) {
-          me.agregarDetalle(response.data);
-        })
-        .catch(function(error) {
-          console.log(error);
-          me.errorArticulo = "*No existe el artículo";
-        });
-    },
-    listarArticulo() {
-      let me = this;
-      let header = { Authorization: "Bearer " + this.$store.state.token };
-      let configuracion = { headers: header };
-      axios
-        .get(`api/Articulos/ListarVenta/${me.texto}`, configuracion)
-        .then(function(response) {
-          me.articulos = response.data;
-        })
-        .catch(function(error) {
-          console.log(error);
-        });
-    },
-    mostrarArticulos() {
-      this.verArticulo = true;
-    },
-    ocultarArticulos() {
-      this.verArticulo = false;
-    },
     agregarDetalle(data = []) {
       this.errorArticulo = null;
       if (this.encuentra(data["idarticulo"])) {
@@ -672,21 +535,15 @@ export default {
       }
       return sw;
     },
-    eliminarDetalle(arr, item) {
-      var i = arr.indexOf(item);
-      if (i !== -1) {
-        arr.splice(i, 1);
-      }
-    },
     listar() {
       let me = this;
       let header = { Authorization: "Bearer " + this.$store.state.token };
       let configuracion = { headers: header };
       let url = ``;
-      if (!me.search) {
+      if (!me.fechaInicio || !me.fechaFin) {
         url = `api/Ventas/Listar`;
       } else {
-        url = `api/Ventas/ListarFiltro/${me.search}`;
+        url = `api/Ventas/ConsultaFechas/${me.fechaInicio}/${me.fechaFin}`;
       }
       axios
         .get(url, configuracion)
@@ -739,37 +596,6 @@ export default {
         });
     },
 
-    activo(accion, item) {
-      this.adModal = 1;
-      this.adNombre = item.num_comprobante;
-      this.adId = item.idventa;
-
-      if (accion === 1) {
-        this.adAccion = 1;
-      } else if (accion === 2) {
-        this.adAccion = 2;
-      } else {
-        this.adModal = 0;
-      }
-    },
-    desactivar() {
-      let me = this;
-      let header = { Authorization: "Bearer " + this.$store.state.token };
-      let configuracion = { headers: header };
-      axios
-        .put(`api/Ventas/Anular/${me.adId}`, {}, configuracion)
-        .then(function(response) {
-          me.adModal = 0;
-          me.adAccion = 0;
-          me.adNombre = "";
-          me.adId = "";
-          me.listar();
-        })
-        .catch(function(err) {
-          console.log(err);
-        });
-    },
-
     cerrarModalActivo() {
       this.adModal = 0;
     },
@@ -792,90 +618,10 @@ export default {
       this.totalParcial = 0;
       this.verDet = true;
     },
-
-    guardar() {
-      if (this.validar()) {
-        return;
-      }
-      let header = { Authorization: "Bearer " + this.$store.state.token };
-      let configuracion = { headers: header };
-
-      //Guardar
-      let me = this;
-      axios
-        .post(
-          `api/Ventas/Crear`,
-          {
-            idcliente: me.idcliente,
-            idusuario: parseInt(me.$store.state.usuario.idusuario),
-            tipo_comprobante: me.tipo_comprobante,
-            serie_comprobante: me.serie_comprobante,
-            num_comprobante: me.num_comprobante,
-            impuesto: me.impuesto,
-            total: me.total,
-            detalles: me.detalles,
-          },
-          configuracion
-        )
-        .then(function(res) {
-          me.ocultarNuevo();
-          me.listar();
-          me.limpiar();
-        })
-        .catch(function(err) {
-          console.log({
-            idcliente: me.idcliente,
-            idusuario: parseInt(me.$store.state.usuario.idusuario),
-            tipo_comprobante: me.tipo_comprobante,
-            serie_comprobante: me.serie_comprobante,
-            num_comprobante: me.num_comprobante,
-            impuesto: me.impuesto,
-            total: me.total,
-            detalles: me.detalles,
-          });
-          console.log(err.message);
-        });
-
-      this.close();
-    },
-
-    validar() {
-      this.valida = 0;
-      this.validaMensaje = [];
-
-      if (!this.idcliente) {
-        this.validaMensaje.push("*Seleccione un cliente.");
-      }
-      if (!this.tipo_comprobante) {
-        this.validaMensaje.push("*Seleccione un tipo de comprobante.");
-      }
-      if (!this.num_comprobante) {
-        this.validaMensaje.push("*Ingrese el número del comprobante.");
-      }
-      if (!this.impuesto || this.impuesto < 0) {
-        this.validaMensaje.push("*Ingrese un valor válido para el impuesto.");
-      }
-      if (this.detalles.length <= 0) {
-        this.validaMensaje.push(
-          "*Ingrese por lo menos un artículo al detalle."
-        );
-      }
-      if (this.validaMensaje.length) {
-        this.valida = 1;
-      }
-
-      return this.valida;
-    },
   },
 };
 </script>
 <style>
-.btnEliminarDetalle {
-  color: #ccc;
-}
-.btnEliminarDetalle:hover {
-  color: #c00;
-}
 .btnAgregarDetalle {
   color: #ccc;
 }

@@ -2,16 +2,21 @@
   <v-layout align-start>
     <v-flex>
       <v-toolbar flat color="white">
-        <v-toolbar-title>Ventas</v-toolbar-title>
+        <v-toolbar-title>Ingresos</v-toolbar-title>
         <v-divider class="mx-2" inset vertical></v-divider>
         <v-spacer></v-spacer>
+        Desde:&nbsp;
         <v-text-field
           class="text-xs-center"
-          v-model="search"
-          append-icon="search"
-          label="Búsqueda"
-          single-line
-          hide-details
+          type="date"
+          v-model="fechaInicio"
+          v-if="!verNuevo"
+        ></v-text-field>
+        Hasta:&nbsp;
+        <v-text-field
+          class="text-xs-center"
+          type="date"
+          v-model="fechaFin"
           v-if="!verNuevo"
         ></v-text-field>
         <template v-if="!verNuevo"
@@ -25,11 +30,6 @@
           >
         </template>
         <v-spacer></v-spacer>
-        <template v-if="!verNuevo"
-          ><v-btn color="primary" dark class="mb-2" @click="mostrarNuevo"
-            >Nuevo</v-btn
-          >
-        </template>
         <v-dialog v-model="verArticulo" max-width="1000px">
           <v-card>
             <v-card-title>
@@ -84,16 +84,16 @@
         <v-dialog v-model="adModal" max-width="350px">
           <v-card>
             <v-card-title class="headline" v-if="adAccion == 1"
-              >¿Activar venta?</v-card-title
+              >¿Activar Ingreso?</v-card-title
             >
             <v-card-title class="headline" v-if="adAccion == 2"
-              >¿Anular venta?</v-card-title
+              >¿Anular Ingreso?</v-card-title
             >
             <v-card-text>
               Estás por
               <span class="text--green" v-if="adAccion == 1">Activar</span>
               <span class="text--red" v-if="adAccion == 2">Anular</span>
-              la venta {{ adNombre }}
+              el ingreso {{ adNombre }}
             </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
@@ -117,148 +117,10 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-        <v-dialog v-model="comprobanteModal" max-width="1000px">
-          <v-card>
-            <v-card-text>
-              <v-btn @click="crearPDF" style="margin-top:20px"
-                ><v-icon>print</v-icon></v-btn
-              >
-
-              <div id="factura" v-if="comprobanteModal">
-                <header>
-                  <div id="logo">
-                    <img src="../assets/logofactura.png" id="imagen" />
-                  </div>
-                  <div id="datos">
-                    <p id="encabezado">
-                      <b>Ventas</b><br />Dirección - Estado, País<br />Telefono:(+000)00000000<br />Email:correo@servidor.com
-                    </p>
-                  </div>
-                  <div id="fact">
-                    <p>
-                      {{ tipo_comprobante }}<br />
-                      {{ serie_comprobante }} - {{ num_comprobante }}<br />
-                      {{ fecha_hora }}
-                    </p>
-                  </div>
-                </header>
-                <br />
-                <section>
-                  <div>
-                    <table id="facliente">
-                      <tbody>
-                        <tr>
-                          <td id="cliente">
-                            <strong>Sr(a). {{ cliente }}</strong
-                            ><br />
-                            <strong>Documento:</strong> {{ num_documento
-                            }}<br />
-                            <strong>Dirección:</strong> {{ direccion }}<br />
-                            <strong>Teléfono:</strong> {{ telefono }}<br />
-                            <strong>Email:</strong> {{ email }}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
-                <br />
-                <section>
-                  <div>
-                    <table id="facarticulo">
-                      <thead>
-                        <tr id="fa">
-                          <th>CANT</th>
-                          <th>DESCRIPCION</th>
-                          <th>PRECIO UNIT</th>
-                          <th>DESC.</th>
-                          <th>PRECIO TOTAL</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr v-for="det in detalles" :key="det.iddetalle_venta">
-                          <td style="text-align:center;">{{ det.cantidad }}</td>
-                          <td>
-                            {{ det.articulo }}
-                          </td>
-                          <td style="text-align:right;">
-                            $ {{ det.precio.toFixed(2) }}
-                          </td>
-                          <td style="text-align:right;">
-                            $ {{ det.descuento.toFixed(2) }}
-                          </td>
-                          <td style="text-align:right;">
-                            $
-                            {{
-                              (
-                                det.precio * det.cantidad -
-                                det.descuento
-                              ).toFixed(2)
-                            }}
-                          </td>
-                        </tr>
-                      </tbody>
-                      <tfoot>
-                        <tr>
-                          <th></th>
-                          <th></th>
-                          <th></th>
-                          <th style="text-align:right;">SUBTOTAL</th>
-                          <th style="text-align:right;">
-                            $
-                            {{
-                              (totalParcial = (total - totalImpuesto).toFixed(
-                                2
-                              ))
-                            }}
-                          </th>
-                        </tr>
-                        <tr>
-                          <th></th>
-                          <th></th>
-                          <th></th>
-                          <th style="text-align:right;">IVA (13%)</th>
-                          <th style="text-align:right;">
-                            $
-                            {{
-                              (totalImpuesto = (
-                                (total * impuesto) /
-                                (100 + impuesto)
-                              ).toFixed(2))
-                            }}
-                          </th>
-                        </tr>
-                        <tr>
-                          <th></th>
-                          <th></th>
-                          <th></th>
-                          <th style="text-align:right;">TOTAL</th>
-                          <th style="text-align:right;">
-                            $ {{ (total = calcularTotal.toFixed(2)) }}
-                          </th>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                </section>
-                <br />
-                <br />
-                <footer>
-                  <div id="gracias">
-                    <p><b>Gracias por su compra!</b></p>
-                  </div>
-                </footer>
-              </div>
-              <v-btn @click="ocultarComprobante" color="blue darken-1" text
-                >Cancelar</v-btn
-              >
-            </v-card-text>
-          </v-card>
-        </v-dialog>
       </v-toolbar>
       <v-data-table
         :headers="headers"
-        :items="ventas"
+        :items="ingresos"
         :search="search"
         class="elevation-1"
         v-if="!verNuevo"
@@ -280,19 +142,6 @@
           >
             tab
           </v-icon>
-          <v-icon
-            small
-            class="mr-2"
-            @click="mostrarComprobante(item)"
-            v-if="item.estado == 'Aceptado'"
-          >
-            print
-          </v-icon>
-          <template v-if="item.estado == 'Aceptado'">
-            <v-icon small @click="activo(2, item)">
-              block
-            </v-icon>
-          </template>
         </template>
         <template v-slot:no-data>
           <span>No hay datos</span>
@@ -324,9 +173,9 @@
           </v-flex>
           <v-flex xs12 sm8 md8 lg8 xl8>
             <v-select
-              v-model="idcliente"
-              :items="clientes"
-              label="Cliente"
+              v-model="idproveedor"
+              :items="proveedores"
+              label="Proveedor"
               :disabled="!verDet"
             ></v-select>
           </v-flex>
@@ -401,7 +250,6 @@
                   small
                   class="mr-2 btnEliminarDetalle"
                   @click="eliminarDetalle(detalles, item)"
-                  :disabled="!verDet"
                 >
                   delete
                 </v-icon>
@@ -417,19 +265,11 @@
                 <v-text-field
                   type="number"
                   v-model.number="item.precio"
-                  disabled
-                ></v-text-field>
-              </template>
-              <template v-slot:[`item.descuento`]="{ item }">
-                <v-text-field
-                  type="number"
-                  v-model.number="item.descuento"
                   :disabled="!verDet"
                 ></v-text-field>
               </template>
               <template v-slot:[`item.subtotal`]="{ item }">
-                $
-                {{ (item.cantidad * item.precio - item.descuento).toFixed(2) }}
+                $ {{ (item.cantidad * item.precio).toFixed(2) }}
               </template>
               <template v-slot:no-data>
                 <span>No hay datos</span>
@@ -475,16 +315,14 @@
 </template>
 <script>
 import axios from "axios";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 export default {
   data() {
     return {
-      ventas: [],
+      ingresos: [],
       dialog: false,
       headers: [
         { text: "Usuario", value: "usuario" },
-        { text: "Cliente", value: "cliente" },
+        { text: "Proveedor", value: "proveedor" },
         { text: "Tipo de comprobante", value: "tipo_comprobante" },
         { text: "Serie de comprobante", value: "serie_comprobante" },
         {
@@ -500,8 +338,8 @@ export default {
       ],
       search: "",
       id: "",
-      idcliente: "",
-      clientes: [],
+      idproveedor: "",
+      proveedores: [],
       tipo_comprobante: "",
       comprobantes: ["FACTURA", "TICKET", "BOLETA"],
       serie_comprobante: "",
@@ -529,7 +367,6 @@ export default {
         { text: "Articulo", value: "articulo", sortable: false },
         { text: "Cantidad", value: "cantidad" },
         { text: "Precio ($)", value: "precio" },
-        { text: "Descuento ($)", value: "descuento" },
         { text: "Subtotal ($)", value: "subtotal" },
       ],
       detalles: [],
@@ -540,13 +377,8 @@ export default {
       adAccion: 0,
       adNombre: "",
       adId: "",
-      comprobanteModal: false,
-      cliente: "",
-      fecha_hora: "",
-      num_documento: "",
-      direccion: "",
-      telefono: "",
-      email: "",
+      fechaInicio: "",
+      fechaFin: "",
     };
   },
   computed: {
@@ -554,9 +386,7 @@ export default {
       var resultado = 0.0;
       for (var i = 0; i < this.detalles.length; i++) {
         resultado =
-          resultado +
-          this.detalles[i].precio * this.detalles[i].cantidad -
-          this.detalles[i].descuento;
+          resultado + this.detalles[i].precio * this.detalles[i].cantidad;
       }
       return resultado;
     },
@@ -570,43 +400,9 @@ export default {
 
   created() {
     this.listar();
-    this.selectClientes();
+    this.selectProveedores();
   },
   methods: {
-    crearPDF() {
-      var quotes = document.getElementById("factura");
-      html2canvas(quotes).then(function(canvas) {
-        var imgData = canvas.toDataURL("image/img");
-        var imgWidth = 210;
-        var pageHeight = 295;
-        var imgHeight = (canvas.height * imgWidth) / canvas.width;
-        var heightLeft = imgHeight;
-        var doc = new jsPDF("p", "mm", "a4");
-        var position = 0;
-
-        doc.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        doc.save("comprobanteVenta.pdf");
-      });
-    },
-    mostrarComprobante(item) {
-      this.limpiar();
-      this.tipo_comprobante = item.tipo_comprobante;
-      this.serie_comprobante = item.serie_comprobante;
-      this.num_comprobante = item.num_comprobante;
-      this.cliente = item.cliente;
-      this.num_documento = item.num_documento;
-      this.direccion = item.direccion;
-      this.telefono = item.telefono;
-      this.email = item.email;
-      this.fecha_hora = item.fecha_hora;
-      this.impuesto = item.impuesto;
-      this.listarDetalles(item.idventa);
-      this.comprobanteModal = true;
-    },
-    ocultarComprobante() {
-      this.comprobanteModal = false;
-      this.limpiar();
-    },
     mostrarNuevo() {
       this.verNuevo = true;
     },
@@ -620,7 +416,7 @@ export default {
       let header = { Authorization: "Bearer " + this.$store.state.token };
       let configuracion = { headers: header };
       axios
-        .get(`api/Articulos/BuscarCodigoVenta/${this.codigo}`, configuracion)
+        .get(`api/Articulos/BuscarCodigoIngreso/${this.codigo}`, configuracion)
         .then(function(response) {
           me.agregarDetalle(response.data);
         })
@@ -634,7 +430,7 @@ export default {
       let header = { Authorization: "Bearer " + this.$store.state.token };
       let configuracion = { headers: header };
       axios
-        .get(`api/Articulos/ListarVenta/${me.texto}`, configuracion)
+        .get(`api/Articulos/ListarIngreso/${me.texto}`, configuracion)
         .then(function(response) {
           me.articulos = response.data;
         })
@@ -657,8 +453,7 @@ export default {
           idarticulo: data["idarticulo"],
           articulo: data["nombre"],
           cantidad: 1,
-          precio: data["precio_venta"],
-          descuento: 0,
+          precio: 1,
         });
       }
     },
@@ -683,15 +478,15 @@ export default {
       let header = { Authorization: "Bearer " + this.$store.state.token };
       let configuracion = { headers: header };
       let url = ``;
-      if (!me.search) {
-        url = `api/Ventas/Listar`;
+      if (!me.fechaInicio || !me.fechaFin) {
+        url = `api/Ingresos/Listar`;
       } else {
-        url = `api/Ventas/ListarFiltro/${me.search}`;
+        url = `api/Ingresos/ConsultaFechas/${me.fechaInicio}/${me.fechaFin}`;
       }
       axios
         .get(url, configuracion)
         .then(function(response) {
-          me.ventas = response.data;
+          me.ingresos = response.data;
         })
         .catch(function(error) {
           console.log(error);
@@ -702,7 +497,7 @@ export default {
       let header = { Authorization: "Bearer " + this.$store.state.token };
       let configuracion = { headers: header };
       axios
-        .get(`api/Ventas/ListarDetalles/${id}`, configuracion)
+        .get(`api/Ingresos/ListarDetalles/${id}`, configuracion)
         .then(function(response) {
           me.detalles = response.data;
         })
@@ -715,23 +510,23 @@ export default {
       this.tipo_comprobante = item.tipo_comprobante;
       this.serie_comprobante = item.serie_comprobante;
       this.num_comprobante = item.num_comprobante;
-      this.idcliente = item.idcliente;
+      this.idproveedor = item.idproveedor;
       this.impuesto = item.impuesto;
-      this.listarDetalles(item.idventa);
+      this.listarDetalles(item.idingreso);
       this.verNuevo = true;
       this.verDet = false;
     },
-    selectClientes() {
+    selectProveedores() {
       let me = this;
       let header = { Authorization: "Bearer " + this.$store.state.token };
       let configuracion = { headers: header };
-      var clientesArray = [];
+      var proveedoresArray = [];
       axios
-        .get(`api/Personas/SelectClientes`, configuracion)
+        .get(`api/Personas/SelectProveedores`, configuracion)
         .then(function(response) {
-          clientesArray = response.data;
-          clientesArray.map(function(pro) {
-            me.clientes.push({ text: pro.nombre, value: pro.idpersona });
+          proveedoresArray = response.data;
+          proveedoresArray.map(function(pro) {
+            me.proveedores.push({ text: pro.nombre, value: pro.idpersona });
           });
         })
         .catch(function(error) {
@@ -742,7 +537,7 @@ export default {
     activo(accion, item) {
       this.adModal = 1;
       this.adNombre = item.num_comprobante;
-      this.adId = item.idventa;
+      this.adId = item.idingreso;
 
       if (accion === 1) {
         this.adAccion = 1;
@@ -757,7 +552,7 @@ export default {
       let header = { Authorization: "Bearer " + this.$store.state.token };
       let configuracion = { headers: header };
       axios
-        .put(`api/Ventas/Anular/${me.adId}`, {}, configuracion)
+        .put(`api/Ingresos/Anular/${me.adId}`, {}, configuracion)
         .then(function(response) {
           me.adModal = 0;
           me.adAccion = 0;
@@ -780,7 +575,7 @@ export default {
 
     limpiar() {
       this.id = "";
-      this.idcliente = "";
+      this.idproveedor = "";
       this.tipo_comprobante = "";
       this.serie_comprobante = "";
       this.num_comprobante = "";
@@ -804,9 +599,9 @@ export default {
       let me = this;
       axios
         .post(
-          `api/Ventas/Crear`,
+          `api/Ingresos/Crear`,
           {
-            idcliente: me.idcliente,
+            idproveedor: me.idproveedor,
             idusuario: parseInt(me.$store.state.usuario.idusuario),
             tipo_comprobante: me.tipo_comprobante,
             serie_comprobante: me.serie_comprobante,
@@ -824,8 +619,8 @@ export default {
         })
         .catch(function(err) {
           console.log({
-            idcliente: me.idcliente,
-            idusuario: parseInt(me.$store.state.usuario.idusuario),
+            idproveedor: me.idproveedor,
+            idusuario: me.$store.state.usuario.idusuario,
             tipo_comprobante: me.tipo_comprobante,
             serie_comprobante: me.serie_comprobante,
             num_comprobante: me.num_comprobante,
@@ -843,8 +638,8 @@ export default {
       this.valida = 0;
       this.validaMensaje = [];
 
-      if (!this.idcliente) {
-        this.validaMensaje.push("*Seleccione un cliente.");
+      if (!this.idproveedor) {
+        this.validaMensaje.push("*Seleccione un proveedor.");
       }
       if (!this.tipo_comprobante) {
         this.validaMensaje.push("*Seleccione un tipo de comprobante.");
@@ -881,80 +676,5 @@ export default {
 }
 .btnAgregarDetalle:hover {
   color: #0c0;
-}
-
-#factura {
-  padding: 20px;
-  font-family: Arial, sans-serif;
-  font-size: 16px;
-}
-
-#logo {
-  float: left;
-  margin-left: 2%;
-  margin-right: 2%;
-}
-#imagen {
-  width: 100px;
-}
-
-#fact {
-  font-size: 18px;
-  font-weight: bold;
-  text-align: center;
-}
-
-#datos {
-  float: left;
-  margin-top: 0%;
-  margin-left: 2%;
-  margin-right: 2%;
-  /*text-align: justify;*/
-}
-
-#encabezado {
-  text-align: center;
-  margin-left: 10px;
-  margin-right: 10px;
-  font-size: 16px;
-}
-
-section {
-  clear: left;
-}
-
-#cliente {
-  text-align: left;
-}
-
-#facliente {
-  width: 40%;
-  border-collapse: collapse;
-  border-spacing: 0;
-  margin-bottom: 15px;
-}
-
-#fa {
-  color: #ffffff;
-  font-size: 14px;
-}
-
-#facarticulo {
-  width: 100%;
-  border-collapse: collapse;
-  border-spacing: 0;
-  padding: 20px;
-  margin-bottom: 15px;
-}
-
-#facarticulo thead {
-  padding: 20px;
-  background: #2183e3;
-  text-align: center;
-  border-bottom: 1px solid #ffffff;
-}
-
-#gracias {
-  text-align: center;
 }
 </style>

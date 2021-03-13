@@ -10,6 +10,8 @@ import Cliente from "../views/Cliente.vue";
 import Proveedor from "../views/Proveedor.vue";
 import Ingreso from "../views/Ingreso.vue";
 import Venta from "../views/Venta.vue";
+import ConsultaVenta from "../views/ConsultaVenta.vue";
+import ConsultaIngreso from "../views/ConsultaIngreso.vue";
 import store from "../store/index";
 
 Vue.use(VueRouter);
@@ -84,6 +86,22 @@ const routes = [
     meta: {
       administrador: true,
       vendedor: true,
+    },
+  },
+  {
+    path: "/consultaventas",
+    name: "consultaventas",
+    component: ConsultaVenta,
+    meta: {
+      administrador: true,
+    },
+  },
+  {
+    path: "/consultaingresos",
+    name: "consultaingresos",
+    component: ConsultaIngreso,
+    meta: {
+      administrador: true,
     },
   },
   {
